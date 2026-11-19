@@ -34,12 +34,14 @@ jobs:
           }
           function getTF(s, iv) {
             const base = s.replace("USDT", "");
-            const gran = iv === "4h" ? 14400 : iv === "1h" ? 3600 : 900;
-            const url = `https://coinbase.com{base}-USD/candles?granularity=${gran}`;
-            const raw = execSync(`curl -4 -s -m 10 -H "User-Agent: Mozilla/5.0" "${url}"`).toString();
-            const data = JSON.parse(raw);
-            if (!Array.isArray(data) || data.length === 0) throw new Error("No Data");
-            const p = data.slice(0, 210).reverse().map(x => parseFloat(x.at(4)));
+            const ep = iv === "15m"
+              ? `histominute?fsym=${base}&tsym=USD&limit=210&aggregate=15`
+              : `histohour?fsym=${base}&tsym=USD&limit=210&aggregate=${iv === "4h" ? 4 : 1}`;
+            const url = `https://cryptocompare.com{ep}`;
+            const raw = execSync(`curl -sL -m 15 "${url}"`).toString();
+            const j = JSON.parse(raw);
+            if (!j.Data || !j.Data.Data || j.Data.Data.length === 0) throw new Error("No Data");
+            const p = j.Data.Data.map(x => parseFloat(x.close));
             const cp = p.at(-1), e50 = ema(p, 50), e200 = ema(p, 200), r = rsi(p);
             const st = (cp > e50 && e50 > e200) ? "BUY" : (cp < e50 && e50 < e200) ? "SELL" : "SIDEWAYS";
             return { st, cp, r };
