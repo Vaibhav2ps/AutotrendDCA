@@ -3,9 +3,19 @@ const https = require("https");
 
 const coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "SUIUSDT"];
 
-function getJSON(url) {
+function getJSONDirect(ip, host, path) {
   return new Promise((resolve, reject) => {
-    https.get(url, { headers: { "User-Agent": "Mozilla/5.0" } }, (res) => {
+    const opts = {
+      host: ip,
+      port: 443,
+      path: path,
+      servername: host,
+      headers: {
+        "Host": host,
+        "User-Agent": "Mozilla/5.0"
+      }
+    };
+    https.get(opts, (res) => {
       let body = "";
       res.on("data", (chunk) => (body += chunk));
       res.on("end", () => {
@@ -57,11 +67,12 @@ function calcStats(p) {
 
 async function getTF(s, iv) {
   const base = s.replace("USDT", "");
-  const okxIv = iv === "4h" ? "4H" : (iv === "1h" ? "1H" : "15m");
-  const okxUrl = "https://okx.com" + base + "-USDT&bar=" + okxIv + "&limit=210";
-  const j = await getJSON(okxUrl);
-  if (!j.data || !j.data.length) throw new Error("No Data");
-  const p = j.data.slice().reverse().map((x) => parseFloat(x.at(4)));
+  const gran = iv === "4h" ? 14400 : (iv === "1h" ? 3600 : 900);
+  // Coinbase Exchange Cloudflare Anycast IP (Zero DNS Lookup)
+  const path = "/products/" + base + "-USD/candles?granularity=" + gran;
+  const d = await getJSONDirect("104.18.35.15", "://coinbase.com", path);
+  if (!Array.isArray(d) || d.length === 0) throw new Error("No Data");
+  const p = d.slice(0, 210).reverse().map((x) => parseFloat(x.at(4)));
   return calcStats(p);
 }
 
