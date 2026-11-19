@@ -46,24 +46,36 @@ function rsi(p) {
   return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
 }
 
-async function getTF(s, iv) {
-  const base = s.replace("USDT", "");
-  let ep = "histohour?fsym=" + base + "&tsym=USD&limit=210&aggregate=1";
-  if (iv === "4h") {
-    ep = "histohour?fsym=" + base + "&tsym=USD&limit=210&aggregate=4";
-  } else if (iv === "15m") {
-    ep = "histominute?fsym=" + base + "&tsym=USD&limit=210&aggregate=15";
-  }
-  const url = "https://cryptocompare.com" + ep;
-  const j = await getJSON(url);
-  if (!j.Data || !j.Data.Data || j.Data.Data.length === 0) throw new Error("No Data");
-  const p = j.Data.Data.map((x) => parseFloat(x.close));
+function calcStats(p) {
   const cp = p.at(-1);
   const e50 = ema(p, 50);
   const e200 = ema(p, 200);
   const r = rsi(p);
   const st = (cp > e50 && e50 > e200) ? "BUY" : (cp < e50 && e50 < e200) ? "SELL" : "SIDEWAYS";
   return { st, cp, r };
+}
+
+async function getTF(s, iv) {
+  const base = s.replace("USDT", "");
+  // 1. Primary: Gate.io Global Spot API (Works on GitHub US Servers)
+  try {
+    const gateUrl = "https://gateio.ws" + base + "_USDT&interval=" + iv + "&limit=210";
+    const data = await getJSON(gateUrl);
+    if (Array.isArray(data) && data.length > 50) {
+      // Gate.io format: [timestamp, volume, close, high, low, open] -> index 2 is close
+      const p = data.map((x) => parseFloat(x.at(2)));
+      return calcStats(p);
+    }
+  } catch (e) {}
+
+  // 2. Backup: Kraken Public OHLC API
+  const krIv = iv === "4h" ? 240 : (iv === "1h" ? 60 : 15);
+  const krUrl = "https://kraken.com" + base + "USD&interval=" + krIv;
+  const j = await getJSON(krUrl);
+  if (j.error && j.error.length) throw new Error(j.error.join(","));
+  const key = Object.keys(j.result).find((k) => k !== "last");
+  const p = j.result[key].slice(-210).map((x) => parseFloat(x.at(4)));
+  return calcStats(p);
 }
 
 (async () => {
