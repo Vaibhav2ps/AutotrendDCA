@@ -1,5 +1,5 @@
 {
-  "updated": "2:59:54 pm",
+  "updated": "3:05:25 pm",
   "results": [
     {
       "c": "BTCUSDT",
@@ -8,7 +8,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
       "code": "ERR"
     },
     {
@@ -18,7 +18,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
       "code": "ERR"
     },
     {
@@ -28,7 +28,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
       "code": "ERR"
     },
     {
@@ -38,7 +38,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
       "code": "ERR"
     },
     {
@@ -48,7 +48,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
       "code": "ERR"
     }
   ]
