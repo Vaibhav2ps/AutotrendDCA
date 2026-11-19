@@ -83,3 +83,6 @@ function runTable(){var c=document.getElementById("coin").value.toUpperCase().re
 document.getElementById("st").innerText="🟢 Ready";
 var sv=localStorage.getItem("dca_gh_main");if(sv){var d=JSON.parse(sv);document.getElementById("coin").value=d.c;document.getElementById("side").value=d.sd;document.getElementById("entry").value=d.en;document.getElementById("lev").value=d.lv;document.getElementById("m1").value=d.m1;document.getElementById("mult").value=d.mu;document.getElementById("drop").value=d.dr;document.getElementById("ord").value=d.or;document.getElementById("tb").innerHTML=d.rw;document.getElementById("cards").innerHTML=d.cd}
 var lastScan=localStorage.getItem("dca_gh_scan");if(lastScan){var ls=JSON.parse(lastScan);setTF("t4",ls.t4);setTF("t1",ls.t1);setTF("t15",ls.t15);document.getElementById("rsi").innerText=ls.rsi;document.getElementById("sig").innerText=ls.sg;document.getElementById("sig").style.color=ls.col;if(ls.lastHtml)document.getElementById("lastBox").innerHTML=ls.lastHtml}
+</script>
+</body>
+</html>
