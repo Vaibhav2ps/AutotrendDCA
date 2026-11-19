@@ -1,5 +1,5 @@
 {
-  "updated": "3:23:12 pm",
+  "updated": "03:27:11 PM",
   "results": [
     {
       "c": "BTCUSDT",
@@ -8,7 +8,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
+      "sig": "Err: <urlopen error [Errno -2]",
       "code": "ERR"
     },
     {
@@ -18,7 +18,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
+      "sig": "Err: <urlopen error [Errno -2]",
       "code": "ERR"
     },
     {
@@ -28,7 +28,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
+      "sig": "Err: <urlopen error [Errno -2]",
       "code": "ERR"
     },
     {
@@ -38,7 +38,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
+      "sig": "Err: <urlopen error [Errno -2]",
       "code": "ERR"
     },
     {
@@ -48,7 +48,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
+      "sig": "Err: <urlopen error [Errno -2]",
       "code": "ERR"
     }
   ]
