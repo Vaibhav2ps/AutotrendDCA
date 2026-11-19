@@ -66,16 +66,48 @@ th,td{padding:7px;border-bottom:1px solid #2b3139}
 <div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Trig</th><th>Margin</th><th>Total</th><th>Avg</th><th>100%</th><th>Liq</th></tr></thead><tbody id="tb"></tbody></table></div>
 </div>
 <script>
+<script>
 var timer=null,sec=60,lastS="";
 function f(n){return n>=1000?n.toFixed(2):n>=1?n.toFixed(4):n.toFixed(6)}
 function beep(){try{var A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator();o.frequency.value=900;o.connect(c.destination);o.start();o.stop(c.currentTime+0.3)}catch(e){}}
 function testBeep(){beep();alert("🔊 Sound Beep OK!")}
-function ema(p,n){var k=2/(n+1),e=p[0];for(var i=1;i<p.length;i++){e=p[i]*k+e*(1-k)}return e}
+function ema(p,n){var k=2/(n+1),e=p;for(var i=1;i<p.length;i++){e=p[i]*k+e*(1-k)}return e}
 function getRsi(p){var g=0,l=0,ag=0,al=0;for(var i=1;i<p.length;i++){var d=p[i]-p[i-1],gn=d>0?d:0,ls=d<0?-d:0;if(i<=14){g+=gn;l+=ls;if(i==14){ag=g/14;al=l/14}}else{ag=(ag*13+gn)/14;al=(al*13+ls)/14}}return al==0?100:100-(100/(1+ag/al))}
 function stats(p,src){document.getElementById("srcLbl").innerText="Source: "+src;var cp=p[p.length-1],e50=ema(p,50),e200=ema(p,200),r=getRsi(p),st="SIDEWAYS";if(cp>e50&&e50>e200)st="BUY";else if(cp<e50&&e50<e200)st="SELL";return{st:st,cp:cp,r:r}}
-function getTF(s,iv){var base=s.replace("USDT",""),ccEp=iv=="15m"?"histominute?fsym="+base+"&tsym=USD&limit=210&aggregate=15":"histohour?fsym="+base+"&tsym=USD&limit=210&aggregate="+(iv=="4h"?4:1),krIv=iv=="4h"?240:iv=="1h"?60:15;return fetch("https://cryptocompare.com"+ccEp).then(function(r){if(!r.ok)throw 1;return r.json()}).then(function(j){if(!j.Data||!j.Data.Data||!j.Data.Data.length)throw 2;var p=[];for(var i=0;i<j.Data.Data.length;i++){p.push(parseFloat(j.Data.Data[i].close))}return stats(p,"CryptoCompare")}).catch(function(){return fetch("https://kraken.com"+base+"USD&interval="+krIv).then(function(r){if(!r.ok)throw 3;return r.json()}).then(function(j){if(j.error&&j.error.length)throw 4;var k=Object.keys(j.result).filter(function(x){return x!="last"})[0],arr=j.result[k].slice(-210),p=[];for(var i=0;i<arr.length;i++){p.push(parseFloat(arr[i][4]))}return stats(p,"Kraken")})})}
+
+function getTF(s,iv){
+  var base=s.replace("USDT","");
+  var cbGran=iv=="4h"?14400:iv=="1h"?3600:900;
+  var cbUrl="https://coinbase.com"+base+"-USD/candles?granularity="+cbGran;
+  var cgMap={"BTC":"bitcoin","ETH":"ethereum","SOL":"solana","XRP":"ripple","BNB":"binancecoin","DOGE":"dogecoin","ADA":"cardano","AVAX":"avalanche-2","DOT":"polkadot","LINK":"chainlink","MATIC":"matic-network","SUI":"sui","PEPE":"pepe","SHIB":"shiba-inu","NEAR":"near","APT":"aptos","ARB":"arbitrum","OP":"optimism","INJ":"injective-protocol","TON":"the-open-network"};
+  var cgId=cgMap[base]||base.toLowerCase();
+  var cgDays=iv=="4h"?"30":iv=="1h"?"7":"1";
+  var cgUrl="https://coingecko.com"+cgId+"/market_chart?vs_currency=usd&days="+cgDays;
+
+  return fetch(cbUrl)
+    .then(function(r){if(!r.ok)throw 1;return r.json()})
+    .then(function(d){
+      if(!d||!d.length)throw 2;
+      var p=[];
+      var rev=d.slice(0,210).reverse();
+      for(var i=0;i<rev.length;i++){p.push(parseFloat(rev[i]))}
+      return stats(p,"Coinbase");
+    })
+    .catch(function(){
+      return fetch(cgUrl)
+        .then(function(r){if(!r.ok)throw new Error("Coin/Network Error");return r.json()})
+        .then(function(j){
+          if(!j.prices||!j.prices.length)throw new Error("Coin nahi mila");
+          var p=[];
+          var arr=j.prices.slice(-210);
+          for(var i=0;i<arr.length;i++){p.push(parseFloat(arr[i]))}
+          return stats(p,"CoinGecko");
+        });
+    });
+}
+
 function setTF(id,val){var el=document.getElementById(id);el.innerText=val;el.className=val=="BUY"?"g":val=="SELL"?"r":"y"}
-function scan(auto){var c=document.getElementById("coin").value.toUpperCase().replace("/","").trim(),sd=document.getElementById("side").value;document.getElementById("coin").value=c;return Promise.all([getTF(c,"4h"),getTF(c,"1h"),getTF(c,"15m")]).then(function(res){var a=res[0],b=res[1],d=res[2],bull=a.st=="BUY"&&b.st=="BUY"&&d.st=="BUY",bear=a.st=="SELL"&&b.st=="SELL"&&d.st=="SELL",sg="MIXED TREND | Price: $"+f(d.cp),col="#f0b90b",code="NO";if(bull){if(d.r>65)sg="BUY Trend par 15m RSI High ("+d.r.toFixed(0)+") - Wait";else if(sd=="LONG"){sg="🚀 STRONG BUY! Price: $"+f(d.cp);col="#0ecb81";code="BUY"}else{sg="⚠️ DANGER: Market BUY me hai, aapne SHORT chuna!";col="#f6465d"}}else if(bear){if(d.r<35)sg="SELL Trend par 15m RSI Low ("+d.r.toFixed(0)+") - Wait";else if(sd=="SHORT"){sg="📉 STRONG SELL! Price: $"+f(d.cp);col="#0ecb81";code="SELL"}else{sg="⚠️ DANGER: Market SELL me hai, aapne LONG chuna!";col="#f6465d"}}setTF("t4",a.st);setTF("t1",b.st);setTF("t15",d.st);document.getElementById("rsi").innerText=d.r.toFixed(1);var sb=document.getElementById("sig");sb.innerText=sg;sb.style.color=col;var now=new Date().toLocaleTimeString(),c4=a.st=="BUY"?"g":a.st=="SELL"?"r":"y",c1=b.st=="BUY"?"g":b.st=="SELL"?"r":"y",c15=d.st=="BUY"?"g":d.st=="SELL"?"r":"y",lastHtml="<span>📌 Last Fetched ("+now+"):</span> <b>"+c+"</b> ($"+f(d.cp)+")<br>• <b>4H:</b> <b class='"+c4+"'>"+a.st+"</b> | <b>1H:</b> <b class='"+c1+"'>"+b.st+"</b> | <b>15m:</b> <b class='"+c15+"'>"+d.st+"</b> (RSI: "+d.r.toFixed(1)+")";document.getElementById("lastBox").innerHTML=lastHtml;var tdObj={cp:d.cp,t4:a.st,t1:b.st,t15:d.st,rsi:d.r.toFixed(1),sg:sg,col:col,lastHtml:lastHtml};localStorage.setItem("dca_gh_scan",JSON.stringify(tdObj));if(auto&&code!="NO"&&lastS!=code){lastS=code;beep();if("Notification"in window&&Notification.permission=="granted")new Notification(code+": "+c,{body:sg});else alert(code+": "+c+"\n"+sg)}if(code=="NO")lastS="";return tdObj})}
+function scan(auto){var c=document.getElementById("coin").value.toUpperCase().replace("/","").trim(),sd=document.getElementById("side").value;document.getElementById("coin").value=c;return Promise.all([getTF(c,"4h"),getTF(c,"1h"),getTF(c,"15m")]).then(function(res){var a=res,b=res,d=res,bull=a.st=="BUY"&&b.st=="BUY"&&d.st=="BUY",bear=a.st=="SELL"&&b.st=="SELL"&&d.st=="SELL",sg="MIXED TREND | Price: $"+f(d.cp),col="#f0b90b",code="NO";if(bull){if(d.r>65)sg="BUY Trend par 15m RSI High ("+d.r.toFixed(0)+") - Wait";else if(sd=="LONG"){sg="🚀 STRONG BUY! Price: $"+f(d.cp);col="#0ecb81";code="BUY"}else{sg="⚠️ DANGER: Market BUY me hai, aapne SHORT chuna!";col="#f6465d"}}else if(bear){if(d.r<35)sg="SELL Trend par 15m RSI Low ("+d.r.toFixed(0)+") - Wait";else if(sd=="SHORT"){sg="📉 STRONG SELL! Price: $"+f(d.cp);col="#0ecb81";code="SELL"}else{sg="⚠️ DANGER: Market SELL me hai, aapne LONG chuna!";col="#f6465d"}}setTF("t4",a.st);setTF("t1",b.st);setTF("t15",d.st);document.getElementById("rsi").innerText=d.r.toFixed(1);var sb=document.getElementById("sig");sb.innerText=sg;sb.style.color=col;var now=new Date().toLocaleTimeString(),c4=a.st=="BUY"?"g":a.st=="SELL"?"r":"y",c1=b.st=="BUY"?"g":b.st=="SELL"?"r":"y",c15=d.st=="BUY"?"g":d.st=="SELL"?"r":"y",lastHtml="<span>📌 Last Fetched ("+now+"):</span> <b>"+c+"</b> ($"+f(d.cp)+")<br>• <b>4H:</b> <b class='"+c4+"'>"+a.st+"</b> | <b>1H:</b> <b class='"+c1+"'>"+b.st+"</b> | <b>15m:</b> <b class='"+c15+"'>"+d.st+"</b> (RSI: "+d.r.toFixed(1)+")";document.getElementById("lastBox").innerHTML=lastHtml;var tdObj={cp:d.cp,t4:a.st,t1:b.st,t15:d.st,rsi:d.r.toFixed(1),sg:sg,col:col,lastHtml:lastHtml};localStorage.setItem("dca_gh_scan",JSON.stringify(tdObj));if(auto&&code!="NO"&&lastS!=code){lastS=code;beep();if("Notification"in window&&Notification.permission=="granted")new Notification(code+": "+c,{body:sg});else alert(code+": "+c+"\n"+sg)}if(code=="NO")lastS="";return tdObj})}
 function togMon(){var b=document.getElementById("mbtn"),ms=document.getElementById("mstat");if(timer){clearInterval(timer);timer=null;b.innerText="🔔 Alarm: OFF";b.className="off";ms.innerText="Monitor OFF"}else{if("Notification"in window)Notification.requestPermission();beep();b.innerText="🔔 Alarm: ON";b.className="on";scan(true);sec=60;timer=setInterval(function(){sec--;if(sec<=0){sec=60;scan(true)}ms.innerText="🟢 Live Scanning... Next in "+sec+"s"},1000)}}
 function calc(){document.getElementById("sig").innerText="Checking Live Market...";runTable();scan(false).then(function(td){var ei=document.getElementById("entry");if(!ei.value||parseFloat(ei.value)<=0)ei.value=td.cp;runTable();document.getElementById("st").innerText="✅ Saved!"}).catch(function(e){document.getElementById("lastBox").innerHTML="<span>📌 Last Attempt ("+new Date().toLocaleTimeString()+"):</span> <b class='r'>API Error ("+e.message+")</b>";document.getElementById("sig").innerText="DCA Saved (Live API Error: "+e.message+")";document.getElementById("st").innerText="✅ Saved (Offline)"})}
 function runTable(){var c=document.getElementById("coin").value.toUpperCase().replace("/","").trim(),sd=document.getElementById("side").value,en=parseFloat(document.getElementById("entry").value)||150,lv=parseFloat(document.getElementById("lev").value)||40,m1=parseFloat(document.getElementById("m1").value)||6,mu=parseFloat(document.getElementById("mult").value)||1.5,dr=parseFloat(document.getElementById("drop").value)||48,or=parseInt(document.getElementById("ord").value)||6,st=(dr/100)/lv,tp=1/lv,lq=0.8/lv,tm=0,tpos=0,tc=0,avg=en,rw="";for(var i=1;i<=or;i++){var tr=i==1?en:(sd=="LONG"?avg*(1-st):avg*(1+st)),om=m1*Math.pow(mu,i-1),op=om*lv,oc=op/tr;tm+=om;tpos+=op;tc+=oc;avg=tpos/tc;var p1=sd=="LONG"?avg*(1+tp):avg*(1-tp),el=sd=="LONG"?avg*(1-lq):avg*(1+lq);rw+="<tr><td>#"+i+"</td><td>"+f(tr)+"</td><td>"+om.toFixed(1)+"</td><td>"+tm.toFixed(1)+"</td><td class='y'>"+f(avg)+"</td><td class='g'>"+f(p1)+"</td><td class='r'>"+f(el)+"</td></tr>"}var sl=sd=="LONG"?avg*(1-0.5/lv):avg*(1+0.5/lv),ls=tm*0.5,cd="<div class='card'>Total: <b class='y'>$"+tm.toFixed(2)+"</b></div><div class='card'>Hard SL: <b class='r'>$"+f(sl)+"</b></div><div class='card'>Max Loss: <b class='r'>-$"+ls.toFixed(2)+"</b></div><div class='card'>Saved: <b class='g'>$"+(tm-ls).toFixed(2)+"</b></div>";document.getElementById("tb").innerHTML=rw;document.getElementById("cards").innerHTML=cd;localStorage.setItem("dca_gh_main",JSON.stringify({c:c,sd:sd,en:en,lv:lv,m1:m1,mu:mu,dr:dr,or:or,rw:rw,cd:cd}))}
