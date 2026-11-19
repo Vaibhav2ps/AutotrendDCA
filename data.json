@@ -1,5 +1,5 @@
 {
-  "updated": "3:17:42 pm",
+  "updated": "3:23:12 pm",
   "results": [
     {
       "c": "BTCUSDT",
@@ -8,7 +8,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND okx.combtc-usdt&bar=4h&limit=210",
+      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
       "code": "ERR"
     },
     {
@@ -18,7 +18,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND okx.cometh-usdt&bar=4h&limit=210",
+      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
       "code": "ERR"
     },
     {
@@ -28,7 +28,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND okx.comsol-usdt&bar=4h&limit=210",
+      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
       "code": "ERR"
     },
     {
@@ -38,7 +38,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND okx.comxrp-usdt&bar=4h&limit=210",
+      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
       "code": "ERR"
     },
     {
@@ -48,7 +48,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND okx.comsui-usdt&bar=4h&limit=210",
+      "sig": "Err: write EPROTO 40BE74DA937B0000:error:0A000410:SSL routines:ssl3_read_bytes:ssl/tls alert handshake failure:../deps/openssl/openssl/ssl/record/rec_layer_s3.c:918:SSL alert number 40\n",
       "code": "ERR"
     }
   ]
