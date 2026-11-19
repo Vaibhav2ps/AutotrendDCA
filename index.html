@@ -78,24 +78,19 @@ function beep(){try{var A=window.AudioContext||window.webkitAudioContext,c=new A
 function ema(p,n){var k=2/(n+1),e=p.slice(0,1).shift();p.forEach(function(v,i){if(i>0)e=v*k+e*(1-k)});return e}
 function getRsi(p){var g=0,l=0,pr=p.slice(0,1).shift(),ag=0,al=0;p.forEach(function(c,i){if(!i)return;var d=c-pr,gn=d>0?d:0,ls=d<0?-d:0;if(i<=14){g+=gn;l+=ls;if(i==14){ag=g/14;al=l/14}}else{ag=(ag*13+gn)/14;al=(al*13+ls)/14}pr=c});return al==0?100:100-(100/(1+ag/al))}
 function stats(p){var cp=p.slice(-1).shift(),e50=ema(p,50),e200=ema(p,200),r=getRsi(p),st="SIDEWAYS";if(cp>e50&&e50>e200)st="BUY";else if(cp<e50&&e50<e200)st="SELL";return{st:st,cp:cp,r:r}}
-function getCgId(b){if(b=="BTC")return"bitcoin";if(b=="ETH")return"ethereum";if(b=="SOL")return"solana";if(b=="XRP")return"ripple";if(b=="BNB")return"binancecoin";if(b=="DOGE")return"dogecoin";if(b=="ADA")return"cardano";if(b=="AVAX")return"avalanche-2";if(b=="DOT")return"polkadot";if(b=="LINK")return"chainlink";if(b=="SUI")return"sui";if(b=="PEPE")return"pepe";if(b=="SHIB")return"shiba-inu";if(b=="NEAR")return"near";if(b=="APT")return"aptos";if(b=="ARB")return"arbitrum";if(b=="OP")return"optimism";if(b=="TON")return"the-open-network";return b.toLowerCase()}
 
 function getTF(s,iv){
-var base=s.replace("USDT","");
 var bnUrl="https://binance.vision"+s+"&interval="+iv+"&limit=210";
-var cbGran=iv=="4h"?14400:iv=="1h"?3600:900;
-var cbUrl="https://coinbase.com"+base+"-USD/candles?granularity="+cbGran;
-var cgId=getCgId(base),cgDays=iv=="4h"?"30":iv=="1h"?"7":"1";
-var cgUrl="https://coingecko.com"+cgId+"/market_chart?vs_currency=usd&days="+cgDays;
+var proxy1="https://codetabs.com"+encodeURIComponent(bnUrl);
+var proxy2="https://corsproxy.io?"+encodeURIComponent(bnUrl);
 
-return fetch(bnUrl)
+return fetch(proxy1)
 .then(function(r){if(!r.ok)throw 1;return r.json()})
 .then(function(d){if(!d||!d.length)throw 2;var p=[];d.forEach(function(x){p.push(parseFloat(x.slice(4,5).shift()))});return stats(p)})
 .catch(function(){
-return fetch(cbUrl).then(function(r){if(!r.ok)throw 3;return r.json()}).then(function(d){if(!d||!d.length)throw 4;var p=[],rev=d.slice(0,210).reverse();rev.forEach(function(x){p.push(parseFloat(x.slice(4,5).shift()))});return stats(p)});
-})
-.catch(function(){
-return fetch(cgUrl).then(function(r){if(!r.ok)throw new Error("Net/Rate Limit");return r.json()}).then(function(j){if(!j.prices||!j.prices.length)throw new Error("Coin Not Found");var p=[],arr=j.prices.slice(-210);arr.forEach(function(x){p.push(parseFloat(x.slice(1,2).shift()))});return stats(p)});
+return fetch(proxy2)
+.then(function(r){if(!r.ok)throw new Error("Proxy/Net Error");return r.json()})
+.then(function(d){if(!d||!d.length)throw new Error("Coin Not Found");var p=[];d.forEach(function(x){p.push(parseFloat(x.slice(4,5).shift()))});return stats(p)});
 });
 }
 
@@ -132,7 +127,7 @@ if(r.code=="BUY"||r.code=="SELL"){
 var key=r.c+"_"+r.code;
 if(!alerted[key]){alerted[key]=true;newAlerts.push(r.c+" -> "+r.sig+" ("+now+")")}
 }else if(r.code=="NONE"){delete alerted[r.c+"_BUY"];delete alerted[r.c+"_SELL"]}
-if(i<list.length-1)await wait(400);
+if(i<list.length-1)await wait(500);
 }
 
 document.getElementById("st").innerText="✅ Updated ("+now+")";
