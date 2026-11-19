@@ -1,0 +1,55 @@
+{
+  "updated": "2:30:31 pm",
+  "results": [
+    {
+      "c": "BTCUSDT",
+      "cp": 0,
+      "t4": "-",
+      "t1": "-",
+      "t15": "-",
+      "rsi": "-",
+      "sig": "API Wait",
+      "code": "ERR"
+    },
+    {
+      "c": "ETHUSDT",
+      "cp": 0,
+      "t4": "-",
+      "t1": "-",
+      "t15": "-",
+      "rsi": "-",
+      "sig": "API Wait",
+      "code": "ERR"
+    },
+    {
+      "c": "SOLUSDT",
+      "cp": 0,
+      "t4": "-",
+      "t1": "-",
+      "t15": "-",
+      "rsi": "-",
+      "sig": "API Wait",
+      "code": "ERR"
+    },
+    {
+      "c": "XRPUSDT",
+      "cp": 0,
+      "t4": "-",
+      "t1": "-",
+      "t15": "-",
+      "rsi": "-",
+      "sig": "API Wait",
+      "code": "ERR"
+    },
+    {
+      "c": "SUIUSDT",
+      "cp": 0,
+      "t4": "-",
+      "t1": "-",
+      "t15": "-",
+      "rsi": "-",
+      "sig": "API Wait",
+      "code": "ERR"
+    }
+  ]
+}
