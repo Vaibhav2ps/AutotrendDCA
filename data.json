@@ -1,5 +1,5 @@
 {
-  "updated": "2:37:05 pm",
+  "updated": "2:41:33 pm",
   "results": [
     {
       "c": "BTCUSDT",
@@ -8,7 +8,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: fetch failed",
+      "sig": "Err: Command failed: curl",
       "code": "ERR"
     },
     {
@@ -18,7 +18,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: fetch failed",
+      "sig": "Err: Command failed: curl",
       "code": "ERR"
     },
     {
@@ -28,7 +28,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: fetch failed",
+      "sig": "Err: Command failed: curl",
       "code": "ERR"
     },
     {
@@ -38,7 +38,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: fetch failed",
+      "sig": "Err: Command failed: curl",
       "code": "ERR"
     },
     {
@@ -48,7 +48,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: fetch failed",
+      "sig": "Err: Command failed: curl",
       "code": "ERR"
     }
   ]
