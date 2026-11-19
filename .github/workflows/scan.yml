@@ -12,64 +12,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run Market Scanner
-        run: |
-          node -e '
-          const fs = require("fs");
-          const { execSync } = require("child_process");
-          const coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "SUIUSDT"];
-          function ema(p, n) {
-            let k = 2 / (n + 1), e = p.at(0);
-            for (let i = 1; i < p.length; i++) e = p.at(i) * k + e * (1 - k);
-            return e;
-          }
-          function rsi(p) {
-            let g = 0, l = 0, ag = 0, al = 0;
-            for (let i = 1; i < p.length; i++) {
-              let d = p.at(i) - p.at(i - 1), gn = d > 0 ? d : 0, ls = d < 0 ? -d : 0;
-              if (i <= 14) { g += gn; l += ls; if (i === 14) { ag = g / 14; al = l / 14; } }
-              else { ag = (ag * 13 + gn) / 14; al = (al * 13 + ls) / 14; }
-            }
-            return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
-          }
-          function getTF(s, iv) {
-            const base = s.replace("USDT", "");
-            const ep = iv === "15m"
-              ? `histominute?fsym=${base}&tsym=USD&limit=210&aggregate=15`
-              : `histohour?fsym=${base}&tsym=USD&limit=210&aggregate=${iv === "4h" ? 4 : 1}`;
-            const url = `https://cryptocompare.com{ep}`;
-            const raw = execSync(`curl -sL -m 15 "${url}"`).toString();
-            const j = JSON.parse(raw);
-            if (!j.Data || !j.Data.Data || j.Data.Data.length === 0) throw new Error("No Data");
-            const p = j.Data.Data.map(x => parseFloat(x.close));
-            const cp = p.at(-1), e50 = ema(p, 50), e200 = ema(p, 200), r = rsi(p);
-            const st = (cp > e50 && e50 > e200) ? "BUY" : (cp < e50 && e50 < e200) ? "SELL" : "SIDEWAYS";
-            return { st, cp, r };
-          }
-          const results = [];
-          for (const c of coins) {
-            try {
-              const a = getTF(c, "4h");
-              const b = getTF(c, "1h");
-              const d = getTF(c, "15m");
-              let sig = "SIDEWAYS", code = "NONE";
-              if (a.st === "BUY" && b.st === "BUY" && d.st === "BUY") {
-                sig = d.r > 65 ? "BUY (RSI High)" : `STRONG BUY @ $${d.cp}`;
-                if (d.r <= 65) code = "BUY";
-              } else if (a.st === "SELL" && b.st === "SELL" && d.st === "SELL") {
-                sig = d.r < 35 ? "SELL (RSI Low)" : `STRONG SELL @ $${d.cp}`;
-                if (d.r >= 35) code = "SELL";
-              }
-              results.push({ c, cp: d.cp, t4: a.st, t1: b.st, t15: d.st, rsi: d.r.toFixed(1), sig, code });
-            } catch (e) {
-              results.push({ c, cp: 0, t4: "-", t1: "-", t15: "-", rsi: "-", sig: "Err: " + e.message.slice(0, 20), code: "ERR" });
-            }
-          }
-          const out = { updated: new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" }), results };
-          fs.writeFileSync("data.json", JSON.stringify(out, null, 2));
-          '
-      - name: Save Data
-        run: |
+      - run: node scan.js
+      - run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add data.json
