@@ -12,8 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: node scan.js
-      - run: |
+      - name: Fix DNS & Run Scanner
+        run: |
+          echo "nameserver 8.8.8.8" | sudo tee /etc/resolv.conf > /dev/null
+          node scan.js
+      - name: Save Data
+        run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add data.json
