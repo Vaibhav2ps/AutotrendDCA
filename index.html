@@ -80,17 +80,27 @@ function getRsi(p){var g=0,l=0,pr=p.slice(0,1).shift(),ag=0,al=0;p.forEach(funct
 function stats(p){var cp=p.slice(-1).shift(),e50=ema(p,50),e200=ema(p,200),r=getRsi(p),st="SIDEWAYS";if(cp>e50&&e50>e200)st="BUY";else if(cp<e50&&e50<e200)st="SELL";return{st:st,cp:cp,r:r}}
 
 function getTF(s,iv){
-var bnUrl="https://binance.vision"+s+"&interval="+iv+"&limit=210";
-var proxy1="https://codetabs.com"+encodeURIComponent(bnUrl);
-var proxy2="https://corsproxy.io?"+encodeURIComponent(bnUrl);
+var base=s.replace("USDT","").replace("USD","");
+var yIv=iv=="15m"?"15m":"1h";
+var yRng=iv=="4h"?"60d":iv=="1h"?"15d":"5d";
+var yUrl="https://yahoo.com"+base+"-USD?interval="+yIv+"&range="+yRng;
+var proxyUrl="https://allorigins.win"+encodeURIComponent(yUrl);
 
-return fetch(proxy1)
-.then(function(r){if(!r.ok)throw 1;return r.json()})
-.then(function(d){if(!d||!d.length)throw 2;var p=[];d.forEach(function(x){p.push(parseFloat(x.slice(4,5).shift()))});return stats(p)})
-.catch(function(){
-return fetch(proxy2)
-.then(function(r){if(!r.ok)throw new Error("Proxy/Net Error");return r.json()})
-.then(function(d){if(!d||!d.length)throw new Error("Coin Not Found");var p=[];d.forEach(function(x){p.push(parseFloat(x.slice(4,5).shift()))});return stats(p)});
+return fetch(proxyUrl)
+.then(function(r){if(!r.ok)throw new Error("Net Error");return r.json()})
+.then(function(w){
+var j=JSON.parse(w.contents);
+if(!j.chart||!j.chart.result||!j.chart.result.length)throw new Error("Coin Not Found");
+var res=j.chart.result.shift();
+var rawP=res.indicators.quote.shift().close;
+var clean=[];
+rawP.forEach(function(v){if(v!==null&&!isNaN(v))clean.push(parseFloat(v))});
+if(iv=="4h"){
+var h4=[];
+for(var i=0;i<clean.length;i+=4){h4.push(clean.slice(i,i+4).pop())}
+clean=h4;
+}
+return stats(clean.slice(-210));
 });
 }
 
@@ -127,7 +137,7 @@ if(r.code=="BUY"||r.code=="SELL"){
 var key=r.c+"_"+r.code;
 if(!alerted[key]){alerted[key]=true;newAlerts.push(r.c+" -> "+r.sig+" ("+now+")")}
 }else if(r.code=="NONE"){delete alerted[r.c+"_BUY"];delete alerted[r.c+"_SELL"]}
-if(i<list.length-1)await wait(500);
+if(i<list.length-1)await wait(300);
 }
 
 document.getElementById("st").innerText="✅ Updated ("+now+")";
