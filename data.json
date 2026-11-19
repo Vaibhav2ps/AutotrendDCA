@@ -1,5 +1,5 @@
 {
-  "updated": "2:48:15 pm",
+  "updated": "2:59:54 pm",
   "results": [
     {
       "c": "BTCUSDT",
@@ -8,7 +8,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: Command failed: curl",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
       "code": "ERR"
     },
     {
@@ -18,7 +18,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: Command failed: curl",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
       "code": "ERR"
     },
     {
@@ -28,7 +28,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: Command failed: curl",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
       "code": "ERR"
     },
     {
@@ -38,7 +38,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: Command failed: curl",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
       "code": "ERR"
     },
     {
@@ -48,7 +48,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: Command failed: curl",
+      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.com{ep}",
       "code": "ERR"
     }
   ]
