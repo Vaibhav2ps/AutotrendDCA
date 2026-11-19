@@ -3,18 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Multi-Coin Trend Scanner + Alarm</title>
+<title>Cloud Crypto Scanner + Alarm</title>
 <style>
 body{background:#0b0e11;color:#eaecef;font-family:sans-serif;padding:12px;margin:0}
 .box{max-width:850px;margin:auto}
 .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 h3{color:#f0b90b;margin:0;font-size:18px}
 .panel{background:#181a20;border:1px solid #2b3139;border-radius:8px;padding:12px;margin-bottom:12px}
-label{font-size:11px;color:#848e9c;display:block;margin-bottom:4px}
-input{width:100%;padding:9px;background:#2b3139;color:#fff;border:1px solid #474d57;border-radius:4px;box-sizing:border-box;font-size:13px;text-transform:uppercase}
-.btns{display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-top:8px}
+.btns{display:grid;grid-template-columns:2fr 1fr;gap:8px}
 button{padding:11px;background:#f0b90b;color:#000;font-weight:bold;border:none;border-radius:4px;cursor:pointer;font-size:13px}
-button:disabled{background:#6b5816;cursor:not-allowed}
 .off{background:#2b3139;color:#fff;border:1px solid #474d57}
 .on{background:#0ecb81;color:#000}
 .alert-box{background:#12161c;border:1px solid #2b3139;border-left:3px solid #f0b90b;border-radius:4px;padding:9px;margin-top:10px;font-size:12px;line-height:1.5}
@@ -33,22 +30,20 @@ td:first-child,th:first-child{text-align:left;padding-left:10px}
 <body>
 <div class="box">
 <div class="top">
-<h3>⚡ Multi-Coin Scanner & Alarm</h3>
-<span id="st" style="font-size:12px;font-weight:bold">🔴 Error</span>
+<h3>⚡ Cloud Crypto Scanner</h3>
+<span id="st" style="font-size:12px;font-weight:bold">🟢 Ready</span>
 </div>
 
 <div class="panel">
-<label>Coins Watchlist (Comma lagakar likhein, jaise: BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT)</label>
-<input id="coins" value="BTCUSDT, ETHUSDT, SOLUSDT, XRPUSDT, SUIUSDT">
 <div class="btns">
-<button type="button" id="chkBtn" onclick="scanAll(false)">🔍 Scan & Save Table</button>
+<button type="button" onclick="loadCloudData(false)">🔄 Refresh Cloud Data</button>
 <button type="button" id="mbtn" class="off" onclick="togMon()">🔔 Alarm: OFF</button>
 </div>
 <div style="display:flex;justify-content:space-between;font-size:11px;color:#848e9c;margin-top:8px">
-<span id="mstat">Monitor OFF</span>
+<span id="mstat">Auto-Refresh OFF</span>
 <a href="#" onclick="beep();alert('🔊 Sound Beep OK!');return false" style="color:#f0b90b">🔊 Test Beep</a>
 </div>
-<div class="alert-box" id="lastBox">📌 <b>Last Signal Alert:</b> Abhi tak koi Strong Buy/Sell signal nahi bana hai.</div>
+<div class="alert-box" id="lastBox">📌 <b>Last Signal Alert:</b> Cloud scan data ka intezar hai...</div>
 </div>
 
 <div class="tbox">
@@ -61,134 +56,70 @@ td:first-child,th:first-child{text-align:left;padding-left:10px}
 <th>1H</th>
 <th>15m</th>
 <th>RSI</th>
-<th>Final Status (Signal Price)</th>
+<th>Final Status</th>
 </tr>
 </thead>
 <tbody id="tb">
-<tr><td colspan="7" style="text-align:center;color:#848e9c;padding:15px">Scan button dabakar live market check karein.</td></tr>
+<tr><td colspan="7" style="text-align:center;color:#848e9c;padding:15px">Refresh button dabayein.</td></tr>
 </tbody>
 </table>
 </div>
 </div>
 
 <script>
-var timer=null,sec=60,alerted={},cbCounter=0;
+var timer=null,sec=60,alerted={};
 function f(n){return n>=1000?n.toFixed(2):n>=1?n.toFixed(4):n.toFixed(6)}
 function beep(){try{var A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator();o.frequency.value=920;o.connect(c.destination);o.start();o.stop(c.currentTime+0.4)}catch(e){}}
-function ema(p,n){var k=2/(n+1),e=p.slice(0,1).shift();p.forEach(function(v,i){if(i>0)e=v*k+e*(1-k)});return e}
-function getRsi(p){var g=0,l=0,pr=p.slice(0,1).shift(),ag=0,al=0;p.forEach(function(c,i){if(!i)return;var d=c-pr,gn=d>0?d:0,ls=d<0?-d:0;if(i<=14){g+=gn;l+=ls;if(i==14){ag=g/14;al=l/14}}else{ag=(ag*13+gn)/14;al=(al*13+ls)/14}pr=c});return al==0?100:100-(100/(1+ag/al))}
-function stats(p){var cp=p.slice(-1).shift(),e50=ema(p,50),e200=ema(p,200),r=getRsi(p),st="SIDEWAYS";if(cp>e50&&e50>e200)st="BUY";else if(cp<e50&&e50<e200)st="SELL";return{st:st,cp:cp,r:r}}
-
-function getTF(s,iv){
-return new Promise(function(resolve,reject){
-var base=s.replace("USDT","").replace("USD","");
-var yIv=iv=="15m"?"15m":"1h";
-var yRng=iv=="4h"?"60d":iv=="1h"?"15d":"5d";
-cbCounter++;
-var cbName="ycb_"+cbCounter+"_"+Date.now();
-var script=document.createElement("script");
-var to=setTimeout(function(){cleanup();reject(new Error("Timeout"))},8000);
-
-function cleanup(){
-clearTimeout(to);
-delete window[cbName];
-if(script.parentNode)script.parentNode.removeChild(script);
-}
-
-window[cbName]=function(j){
-cleanup();
-try{
-if(!j.chart||!j.chart.result||!j.chart.result.length)return reject(new Error("Invalid Coin"));
-var res=j.chart.result.shift();
-var rawP=res.indicators.quote.shift().close;
-var clean=[];
-rawP.forEach(function(v){if(v!==null&&!isNaN(v))clean.push(parseFloat(v))});
-if(iv=="4h"){
-var h4=[];
-for(var i=0;i<clean.length;i+=4){h4.push(clean.slice(i,i+4).pop())}
-clean=h4;
-}
-resolve(stats(clean.slice(-210)));
-}catch(e){reject(new Error("Data Error"))}
-};
-
-script.onerror=function(){cleanup();reject(new Error("Net Block"))};
-script.src="https://yahoo.com"+base+"-USD?interval="+yIv+"&range="+yRng+"&callback="+cbName;
-document.body.appendChild(script);
-});
-}
-
-function scanOne(c){
-return Promise.all([getTF(c,"4h"),getTF(c,"1h"),getTF(c,"15m")]).then(function(res){
-var a=res.shift(),b=res.shift(),d=res.shift(),bull=a.st=="BUY"&&b.st=="BUY"&&d.st=="BUY",bear=a.st=="SELL"&&b.st=="SELL"&&d.st=="SELL";
-var sig="SIDEWAYS",cls="bg-y",code="NONE";
-if(bull){if(d.r>65){sig="BUY (RSI High)";cls="bg-y"}else{sig="STRONG BUY @ $"+f(d.cp);cls="bg-g";code="BUY"}}
-else if(bear){if(d.r<35){sig="SELL (RSI Low)";cls="bg-y"}else{sig="STRONG SELL @ $"+f(d.cp);cls="bg-r";code="SELL"}}
-return{c:c,cp:d.cp,t4:a.st,t1:b.st,t15:d.st,rsi:d.r.toFixed(1),sig:sig,cls:cls,code:code};
-}).catch(function(e){return{c:c,cp:0,t4:"-",t1:"-",t15:"-",rsi:"-",sig:"Retry ("+e.message+")",cls:"bg-r",code:"ERR"}});
-}
-
 function cCls(v){return v=="BUY"?"g":v=="SELL"?"r":"y"}
-function wait(ms){return new Promise(function(res){setTimeout(res,ms)})}
 
-async function scanAll(auto){
-var raw=document.getElementById("coins").value.toUpperCase(),list=[];
-raw.split(",").forEach(function(x){var clean=x.replace("/","").trim();if(clean)list.push(clean)});
-if(!list.length)return;
-localStorage.setItem("mc_list",list.join(", "));
-var btn=document.getElementById("chkBtn");btn.disabled=true;
-
-var html="",now=new Date().toLocaleTimeString(),newAlerts=[];
-for(var i=0;i<list.length;i++){
-var c=list.slice(i,i+1).shift();
-btn.innerText="Scanning ("+(i+1)+"/"+list.length+") "+c+"...";
-var r=await scanOne(c);
+function loadCloudData(auto){
+fetch("./data.json?t="+Date.now())
+.then(function(r){if(!r.ok)throw new Error("Actions tab se pehle scan run karein");return r.json()})
+.then(function(data){
+var html="",newAlerts=[];
+data.results.forEach(function(r){
 var pTxt=r.cp>0?"$"+f(r.cp):"-";
-html+="<tr><td><b>"+r.c+"</b></td><td><b>"+pTxt+"</b></td><td class='"+cCls(r.t4)+"'>"+r.t4+"</td><td class='"+cCls(r.t1)+"'>"+r.t1+"</td><td class='"+cCls(r.t15)+"'>"+r.t15+"</td><td>"+r.rsi+"</td><td><span class='badge "+r.cls+"'>"+r.sig+"</span></td></tr>";
-document.getElementById("tb").innerHTML=html;
-
+var bCls=r.code=="BUY"?"bg-g":r.code=="SELL"?"bg-r":"bg-y";
+html+="<tr><td><b>"+r.c+"</b></td><td><b>"+pTxt+"</b></td><td class='"+cCls(r.t4)+"'>"+r.t4+"</td><td class='"+cCls(r.t1)+"'>"+r.t1+"</td><td class='"+cCls(r.t15)+"'>"+r.t15+"</td><td>"+r.rsi+"</td><td><span class='badge "+bCls+"'>"+r.sig+"</span></td></tr>";
 if(r.code=="BUY"||r.code=="SELL"){
 var key=r.c+"_"+r.code;
-if(!alerted[key]){alerted[key]=true;newAlerts.push(r.c+" -> "+r.sig+" ("+now+")")}
+if(!alerted[key]){alerted[key]=true;newAlerts.push(r.c+" -> "+r.sig+" ("+data.updated+")")}
 }else if(r.code=="NONE"){delete alerted[r.c+"_BUY"];delete alerted[r.c+"_SELL"]}
-if(i<list.length-1)await wait(250);
-}
-
-document.getElementById("st").innerText="✅ Updated ("+now+")";
-localStorage.setItem("mc_table",html);
-
+});
+document.getElementById("tb").innerHTML=html;
+document.getElementById("st").innerText="✅ Cloud Time: "+data.updated;
+localStorage.setItem("cloud_tb",html);
 if(newAlerts.length>0){
-var alertMsg="🚨 <b>Latest Signal ("+now+"):</b> "+newAlerts.join(" | ");
-document.getElementById("lastBox").innerHTML=alertMsg;
-localStorage.setItem("mc_alert",alertMsg);
+var msg="🚨 <b>Latest Signal ("+data.updated+"):</b> "+newAlerts.join(" | ");
+document.getElementById("lastBox").innerHTML=msg;
+localStorage.setItem("cloud_al",msg);
 if(auto){
 beep();
-if("Notification"in window&&Notification.permission=="granted")new Notification("Crypto Signal Alert!",{body:newAlerts.join("\n")});
-else alert("🚨 SIGNAL ALERT:\n"+newAlerts.join("\n"));
+if("Notification"in window&&Notification.permission=="granted")new Notification("Crypto Signal!",{body:newAlerts.join("\n")});
+else alert("🚨 SIGNAL:\n"+newAlerts.join("\n"));
 }
 }
-btn.disabled=false;btn.innerText="🔍 Scan & Save Table";
+})
+.catch(function(e){document.getElementById("st").innerText="⚠️ "+e.message});
 }
 
 function startMon(){
 var b=document.getElementById("mbtn"),ms=document.getElementById("mstat");
 if(timer)clearInterval(timer);
-b.innerText="🔔 Alarm: ON";b.className="on";localStorage.setItem("mc_alarm","1");
-scanAll(true);sec=60;
-timer=setInterval(function(){sec--;if(sec<=0){sec=60;scanAll(true)}ms.innerText="🟢 Auto-Scanning Watchlist... Next in "+sec+"s"},1000);
+b.innerText="🔔 Alarm: ON";b.className="on";localStorage.setItem("cloud_alarm","1");
+loadCloudData(true);sec=60;
+timer=setInterval(function(){sec--;if(sec<=0){sec=60;loadCloudData(true)}ms.innerText="🟢 Checking Cloud Data... Next in "+sec+"s"},1000);
 }
 function stopMon(){
 var b=document.getElementById("mbtn"),ms=document.getElementById("mstat");
 if(timer){clearInterval(timer);timer=null}
-b.innerText="🔔 Alarm: OFF";b.className="off";ms.innerText="Monitor OFF";localStorage.setItem("mc_alarm","0");
+b.innerText="🔔 Alarm: OFF";b.className="off";ms.innerText="Auto-Refresh OFF";localStorage.setItem("cloud_alarm","0");
 }
 function togMon(){if(timer){stopMon()}else{if("Notification"in window)Notification.requestPermission();beep();startMon()}}
 
-document.getElementById("st").innerText="🟢 Ready";
-var svList=localStorage.getItem("mc_list");if(svList)document.getElementById("coins").value=svList;
-var svTb=localStorage.getItem("mc_table");if(svTb)document.getElementById("tb").innerHTML=svTb;
-var svAl=localStorage.getItem("mc_alert");if(svAl)document.getElementById("lastBox").innerHTML=svAl;
-if(localStorage.getItem("mc_alarm")=="1"){startMon()}
+var svTb=localStorage.getItem("cloud_tb");if(svTb)document.getElementById("tb").innerHTML=svTb;
+var svAl=localStorage.getItem("cloud_al");if(svAl)document.getElementById("lastBox").innerHTML=svAl;
+if(localStorage.getItem("cloud_alarm")=="1"){startMon()}else{loadCloudData(false)}
 </script>
 </body>
 </html>
