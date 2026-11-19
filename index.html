@@ -66,6 +66,7 @@ th,td{padding:7px;border-bottom:1px solid #2b3139}
 <div style="overflow-x:auto"><table><thead><tr><th>#</th><th>Trig</th><th>Margin</th><th>Total</th><th>Avg</th><th>100%</th><th>Liq</th></tr></thead><tbody id="tb"></tbody></table></div>
 </div>
 <script>
+window.onerror=function(m,u,l){document.getElementById("st").innerText="🔴 L"+l+": "+m};
 var timer=null,sec=60,lastS="";
 function f(n){return n>=1000?n.toFixed(2):n>=1?n.toFixed(4):n.toFixed(6)}
 function beep(){try{var A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator();o.frequency.value=900;o.connect(c.destination);o.start();o.stop(c.currentTime+0.3)}catch(e){}}
