@@ -1,5 +1,5 @@
 {
-  "updated": "3:05:25 pm",
+  "updated": "3:11:09 pm",
   "results": [
     {
       "c": "BTCUSDT",
@@ -8,7 +8,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
+      "sig": "Err: getaddrinfo ENOTFOUND kraken.combtcusd&interval=240",
       "code": "ERR"
     },
     {
@@ -18,7 +18,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
+      "sig": "Err: getaddrinfo ENOTFOUND kraken.comethusd&interval=240",
       "code": "ERR"
     },
     {
@@ -28,7 +28,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
+      "sig": "Err: getaddrinfo ENOTFOUND kraken.comsolusd&interval=240",
       "code": "ERR"
     },
     {
@@ -38,7 +38,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
+      "sig": "Err: getaddrinfo ENOTFOUND kraken.comxrpusd&interval=240",
       "code": "ERR"
     },
     {
@@ -48,7 +48,7 @@
       "t1": "-",
       "t15": "-",
       "rsi": "-",
-      "sig": "Err: getaddrinfo ENOTFOUND cryptocompare.comhistohour",
+      "sig": "Err: getaddrinfo ENOTFOUND kraken.comsuiusd&interval=240",
       "code": "ERR"
     }
   ]
