@@ -57,24 +57,11 @@ function calcStats(p) {
 
 async function getTF(s, iv) {
   const base = s.replace("USDT", "");
-  // 1. Primary: Gate.io Global Spot API (Works on GitHub US Servers)
-  try {
-    const gateUrl = "https://gateio.ws" + base + "_USDT&interval=" + iv + "&limit=210";
-    const data = await getJSON(gateUrl);
-    if (Array.isArray(data) && data.length > 50) {
-      // Gate.io format: [timestamp, volume, close, high, low, open] -> index 2 is close
-      const p = data.map((x) => parseFloat(x.at(2)));
-      return calcStats(p);
-    }
-  } catch (e) {}
-
-  // 2. Backup: Kraken Public OHLC API
-  const krIv = iv === "4h" ? 240 : (iv === "1h" ? 60 : 15);
-  const krUrl = "https://kraken.com" + base + "USD&interval=" + krIv;
-  const j = await getJSON(krUrl);
-  if (j.error && j.error.length) throw new Error(j.error.join(","));
-  const key = Object.keys(j.result).find((k) => k !== "last");
-  const p = j.result[key].slice(-210).map((x) => parseFloat(x.at(4)));
+  const okxIv = iv === "4h" ? "4H" : (iv === "1h" ? "1H" : "15m");
+  const okxUrl = "https://okx.com" + base + "-USDT&bar=" + okxIv + "&limit=210";
+  const j = await getJSON(okxUrl);
+  if (!j.data || !j.data.length) throw new Error("No Data");
+  const p = j.data.slice().reverse().map((x) => parseFloat(x.at(4)));
   return calcStats(p);
 }
 
