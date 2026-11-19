@@ -72,7 +72,7 @@ td:first-child,th:first-child{text-align:left;padding-left:10px}
 </div>
 
 <script>
-var timer=null,sec=60,alerted={};
+var timer=null,sec=60,alerted={},cbCounter=0;
 function f(n){return n>=1000?n.toFixed(2):n>=1?n.toFixed(4):n.toFixed(6)}
 function beep(){try{var A=window.AudioContext||window.webkitAudioContext,c=new A(),o=c.createOscillator();o.frequency.value=920;o.connect(c.destination);o.start();o.stop(c.currentTime+0.4)}catch(e){}}
 function ema(p,n){var k=2/(n+1),e=p.slice(0,1).shift();p.forEach(function(v,i){if(i>0)e=v*k+e*(1-k)});return e}
@@ -80,17 +80,25 @@ function getRsi(p){var g=0,l=0,pr=p.slice(0,1).shift(),ag=0,al=0;p.forEach(funct
 function stats(p){var cp=p.slice(-1).shift(),e50=ema(p,50),e200=ema(p,200),r=getRsi(p),st="SIDEWAYS";if(cp>e50&&e50>e200)st="BUY";else if(cp<e50&&e50<e200)st="SELL";return{st:st,cp:cp,r:r}}
 
 function getTF(s,iv){
+return new Promise(function(resolve,reject){
 var base=s.replace("USDT","").replace("USD","");
 var yIv=iv=="15m"?"15m":"1h";
 var yRng=iv=="4h"?"60d":iv=="1h"?"15d":"5d";
-var yUrl="https://yahoo.com"+base+"-USD?interval="+yIv+"&range="+yRng;
-var proxyUrl="https://allorigins.win"+encodeURIComponent(yUrl);
+cbCounter++;
+var cbName="ycb_"+cbCounter+"_"+Date.now();
+var script=document.createElement("script");
+var to=setTimeout(function(){cleanup();reject(new Error("Timeout"))},8000);
 
-return fetch(proxyUrl)
-.then(function(r){if(!r.ok)throw new Error("Net Error");return r.json()})
-.then(function(w){
-var j=JSON.parse(w.contents);
-if(!j.chart||!j.chart.result||!j.chart.result.length)throw new Error("Coin Not Found");
+function cleanup(){
+clearTimeout(to);
+delete window[cbName];
+if(script.parentNode)script.parentNode.removeChild(script);
+}
+
+window[cbName]=function(j){
+cleanup();
+try{
+if(!j.chart||!j.chart.result||!j.chart.result.length)return reject(new Error("Invalid Coin"));
 var res=j.chart.result.shift();
 var rawP=res.indicators.quote.shift().close;
 var clean=[];
@@ -100,7 +108,13 @@ var h4=[];
 for(var i=0;i<clean.length;i+=4){h4.push(clean.slice(i,i+4).pop())}
 clean=h4;
 }
-return stats(clean.slice(-210));
+resolve(stats(clean.slice(-210)));
+}catch(e){reject(new Error("Data Error"))}
+};
+
+script.onerror=function(){cleanup();reject(new Error("Net Block"))};
+script.src="https://yahoo.com"+base+"-USD?interval="+yIv+"&range="+yRng+"&callback="+cbName;
+document.body.appendChild(script);
 });
 }
 
@@ -137,7 +151,7 @@ if(r.code=="BUY"||r.code=="SELL"){
 var key=r.c+"_"+r.code;
 if(!alerted[key]){alerted[key]=true;newAlerts.push(r.c+" -> "+r.sig+" ("+now+")")}
 }else if(r.code=="NONE"){delete alerted[r.c+"_BUY"];delete alerted[r.c+"_SELL"]}
-if(i<list.length-1)await wait(300);
+if(i<list.length-1)await wait(250);
 }
 
 document.getElementById("st").innerText="✅ Updated ("+now+")";
