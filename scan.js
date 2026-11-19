@@ -48,10 +48,13 @@ function rsi(p) {
 
 async function getTF(s, iv) {
   const base = s.replace("USDT", "");
-  const ep = iv === "15m"
-    ? `histominute?fsym=${base}&tsym=USD&limit=210&aggregate=15`
-    : `histohour?fsym=${base}&tsym=USD&limit=210&aggregate=${iv === "4h" ? 4 : 1}`;
-  const url = `https://cryptocompare.com{ep}`;
+  let ep = "histohour?fsym=" + base + "&tsym=USD&limit=210&aggregate=1";
+  if (iv === "4h") {
+    ep = "histohour?fsym=" + base + "&tsym=USD&limit=210&aggregate=4";
+  } else if (iv === "15m") {
+    ep = "histominute?fsym=" + base + "&tsym=USD&limit=210&aggregate=15";
+  }
+  const url = "https://cryptocompare.com" + ep;
   const j = await getJSON(url);
   if (!j.Data || !j.Data.Data || j.Data.Data.length === 0) throw new Error("No Data");
   const p = j.Data.Data.map((x) => parseFloat(x.close));
@@ -72,10 +75,10 @@ async function getTF(s, iv) {
       const d = await getTF(c, "15m");
       let sig = "SIDEWAYS", code = "NONE";
       if (a.st === "BUY" && b.st === "BUY" && d.st === "BUY") {
-        sig = d.r > 65 ? "BUY (RSI High)" : `STRONG BUY @ $${d.cp}`;
+        sig = d.r > 65 ? "BUY (RSI High)" : "STRONG BUY @ $" + d.cp;
         if (d.r <= 65) code = "BUY";
       } else if (a.st === "SELL" && b.st === "SELL" && d.st === "SELL") {
-        sig = d.r < 35 ? "SELL (RSI Low)" : `STRONG SELL @ $${d.cp}`;
+        sig = d.r < 35 ? "SELL (RSI Low)" : "STRONG SELL @ $" + d.cp;
         if (d.r >= 35) code = "SELL";
       }
       results.push({ c, cp: d.cp, t4: a.st, t1: b.st, t15: d.st, rsi: d.r.toFixed(1), sig, code });
