@@ -16,6 +16,7 @@ jobs:
         run: |
           node -e '
           const fs = require("fs");
+          const { execSync } = require("child_process");
           const coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "SUIUSDT"];
           function ema(p, n) {
             let k = 2 / (n + 1), e = p.at(0);
@@ -31,40 +32,39 @@ jobs:
             }
             return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
           }
-          async function getTF(s, iv) {
+          function getTF(s, iv) {
             const base = s.replace("USDT", "");
             const gran = iv === "4h" ? 14400 : iv === "1h" ? 3600 : 900;
             const url = `https://coinbase.com{base}-USD/candles?granularity=${gran}`;
-            const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
-            if (!res.ok) throw new Error("HTTP " + res.status);
-            const data = await res.json();
+            const raw = execSync(`curl -4 -s -m 10 -H "User-Agent: Mozilla/5.0" "${url}"`).toString();
+            const data = JSON.parse(raw);
             if (!Array.isArray(data) || data.length === 0) throw new Error("No Data");
             const p = data.slice(0, 210).reverse().map(x => parseFloat(x.at(4)));
             const cp = p.at(-1), e50 = ema(p, 50), e200 = ema(p, 200), r = rsi(p);
             const st = (cp > e50 && e50 > e200) ? "BUY" : (cp < e50 && e50 < e200) ? "SELL" : "SIDEWAYS";
             return { st, cp, r };
           }
-          (async () => {
-            const results = [];
-            for (const c of coins) {
-              try {
-                const [a, b, d] = await Promise.all([getTF(c, "4h"), getTF(c, "1h"), getTF(c, "15m")]);
-                let sig = "SIDEWAYS", code = "NONE";
-                if (a.st === "BUY" && b.st === "BUY" && d.st === "BUY") {
-                  sig = d.r > 65 ? "BUY (RSI High)" : `STRONG BUY @ $${d.cp}`;
-                  if (d.r <= 65) code = "BUY";
-                } else if (a.st === "SELL" && b.st === "SELL" && d.st === "SELL") {
-                  sig = d.r < 35 ? "SELL (RSI Low)" : `STRONG SELL @ $${d.cp}`;
-                  if (d.r >= 35) code = "SELL";
-                }
-                results.push({ c, cp: d.cp, t4: a.st, t1: b.st, t15: d.st, rsi: d.r.toFixed(1), sig, code });
-              } catch (e) {
-                results.push({ c, cp: 0, t4: "-", t1: "-", t15: "-", rsi: "-", sig: "Err: " + e.message, code: "ERR" });
+          const results = [];
+          for (const c of coins) {
+            try {
+              const a = getTF(c, "4h");
+              const b = getTF(c, "1h");
+              const d = getTF(c, "15m");
+              let sig = "SIDEWAYS", code = "NONE";
+              if (a.st === "BUY" && b.st === "BUY" && d.st === "BUY") {
+                sig = d.r > 65 ? "BUY (RSI High)" : `STRONG BUY @ $${d.cp}`;
+                if (d.r <= 65) code = "BUY";
+              } else if (a.st === "SELL" && b.st === "SELL" && d.st === "SELL") {
+                sig = d.r < 35 ? "SELL (RSI Low)" : `STRONG SELL @ $${d.cp}`;
+                if (d.r >= 35) code = "SELL";
               }
+              results.push({ c, cp: d.cp, t4: a.st, t1: b.st, t15: d.st, rsi: d.r.toFixed(1), sig, code });
+            } catch (e) {
+              results.push({ c, cp: 0, t4: "-", t1: "-", t15: "-", rsi: "-", sig: "Err: " + e.message.slice(0, 20), code: "ERR" });
             }
-            const out = { updated: new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" }), results };
-            fs.writeFileSync("data.json", JSON.stringify(out, null, 2));
-          })();
+          }
+          const out = { updated: new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" }), results };
+          fs.writeFileSync("data.json", JSON.stringify(out, null, 2));
           '
       - name: Save Data
         run: |
