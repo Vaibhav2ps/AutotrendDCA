@@ -1,0 +1,71 @@
+name: Auto Crypto Trend Scan
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Market Scanner
+        run: |
+          node -e '
+          const fs = require("fs");
+          const coins = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "SUIUSDT"];
+          function ema(p, n) {
+            let k = 2 / (n + 1), e = p[0];
+            for (let i = 1; i < p.length; i++) e = p[i] * k + e * (1 - k);
+            return e;
+          }
+          function rsi(p) {
+            let g = 0, l = 0, ag = 0, al = 0;
+            for (let i = 1; i < p.length; i++) {
+              let d = p[i] - p[i - 1], gn = d > 0 ? d : 0, ls = d < 0 ? -d : 0;
+              if (i <= 14) { g += gn; l += ls; if (i === 14) { ag = g / 14; al = l / 14; } }
+              else { ag = (ag * 13 + gn) / 14; al = (al * 13 + ls) / 14; }
+            }
+            return al === 0 ? 100 : 100 - (100 / (1 + ag / al));
+          }
+          async function getTF(s, iv) {
+            const url = `https://binance.vision{s}&interval=${iv}&limit=210`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const p = data.map(x => parseFloat(x[4]));
+            const cp = p[p.length - 1], e50 = ema(p, 50), e200 = ema(p, 200), r = rsi(p);
+            const st = (cp > e50 && e50 > e200) ? "BUY" : (cp < e50 && e50 < e200) ? "SELL" : "SIDEWAYS";
+            return { st, cp, r };
+          }
+          (async () => {
+            const results = [];
+            for (const c of coins) {
+              try {
+                const [a, b, d] = await Promise.all([getTF(c, "4h"), getTF(c, "1h"), getTF(c, "15m")]);
+                let sig = "SIDEWAYS", code = "NONE";
+                if (a.st === "BUY" && b.st === "BUY" && d.st === "BUY") {
+                  sig = d.r > 65 ? "BUY (RSI High)" : `STRONG BUY @ $${d.cp}`;
+                  if (d.r <= 65) code = "BUY";
+                } else if (a.st === "SELL" && b.st === "SELL" && d.st === "SELL") {
+                  sig = d.r < 35 ? "SELL (RSI Low)" : `STRONG SELL @ $${d.cp}`;
+                  if (d.r >= 35) code = "SELL";
+                }
+                results.push({ c, cp: d.cp, t4: a.st, t1: b.st, t15: d.st, rsi: d.r.toFixed(1), sig, code });
+              } catch (e) {
+                results.push({ c, cp: 0, t4: "-", t1: "-", t15: "-", rsi: "-", sig: "API Wait", code: "ERR" });
+              }
+            }
+            const out = { updated: new Date().toLocaleTimeString("en-IN", { timeZone: "Asia/Kolkata" }), results };
+            fs.writeFileSync("data.json", JSON.stringify(out, null, 2));
+          })();
+          '
+      - name: Save Data
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data.json
+          git commit -m "Update prices" || exit 0
+          git push
